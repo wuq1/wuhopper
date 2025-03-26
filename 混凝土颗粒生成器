@@ -1,1 +1,130 @@
+int t = panduan(listcount, breps.Count - 1);
+    int bn = t + 1;
+    if (reset)
+    {
+      i = 0;
+      breps.Clear();
+      brepsinside.Clear();
+      brepsinsideed.Clear();
+      brepsinsideed01.Clear();
+      Print("重置");
+      return; // 跳过剩余代码
+    }
+    // i++;
+    bool vb = breps.Count < allint(listcount) && breps.Count < jx;
+    bool vb2 = breps.Count == allint(listcount) || breps.Count == jx;
+    if(vb2)
+    {
+      if(jg)
+      {
+        tiancong0 = breps;
+        inside = brepsinside;
+        ceng0 = brepsinsideed01;
+        ceng1 = brepsinsideed;
+        Print("生成完毕或者达到限值");
+        return;
+      }
+      else
+      {
+        Print("第" + i + "次运行，" + "已经投放" + breps.Count + "颗。目前为第" + bn + "种颗粒。生成结束，请点击’生成技术显示‘按钮将其bake到rhino");
+      }
+    }
+    if(vb)
+    {
+      i++;
+      Random rand1 = new Random();
+      Point3d pt = BoxToPts(box, 1, rand1.Next())[0];
+      //
 
+      Brep bb = new Brep();
+      Brep bk = RandomPointToBrep(pt, listr[t], rand1.Next(), listm[t], listc[t], ceng, out bb);
+
+      //
+      //List <Brep> bps = new List<Brep>();
+      List <Brep> bps = pzxz(breps, bk, 40);
+      List <Brep> bpsed = new List<Brep>();
+      foreach(Brep b in pzbox)
+      {
+
+        bpsed.Add(b);
+
+      }
+      bpsed.Add(bk);
+      bool ded = pzjc(bpsed);
+      if(ded == false)
+      {
+        Print("第" + i + "次运行，" + "已经投放" + breps.Count + "颗。目前为第" + bn + "种颗粒。");
+        /*目前为第" + bn + "种颗粒。*/
+        //tiancong0 = breps;
+        C = bk;
+        // inside = brepsinside;
+        // ceng0 = brepsinsideed01;
+        // ceng1 = brepsinsideed;
+        return;
+      }
+
+      //
+      /* foreach(Brep b in breps)
+      {
+      if(b != null)
+      {
+      bps.Add(b);
+      }
+      }
+      */
+
+      bps.Add(bk);
+
+      bool d = pzjc(bps);
+      //
+
+      if(breps.Count == 0)
+      {
+        if(ded)
+        {
+          breps.Add(bk);
+          //brepsd.Add(bk);
+          brepsinside.Add(bb);
+          if(listc[t])
+          {
+            brepsinsideed.Add(bk);
+            brepsinsideed01.Add(bb);
+          }
+        }
+      }
+      else
+      {
+
+        if(d && ded)
+        {
+          //brepsd.Add(bk);
+          breps.Add(bk);
+          brepsinside.Add(bb);
+          if(listc[t])
+          {
+            brepsinsideed.Add(bk);
+            brepsinsideed01.Add(bb);
+          }
+
+        }
+        else
+        {
+          // brepsd = brepsd;
+        }
+      }
+
+      //
+
+
+
+
+      //
+      Print("第" + i + "次运行，" + "已经投放" + breps.Count + "颗。目前为第" + bn + "种颗粒。");
+      /*目/前为第" + bn + "种颗粒。*/
+      //tiancong0 = breps;
+      C = bk;
+      //inside = brepsinside;
+      // ceng0 = brepsinsideed01;
+      //ceng1 = brepsinsideed;
+      //pz = bps;
+    }
