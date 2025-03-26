@@ -128,3 +128,459 @@ int t = panduan(listcount, breps.Count - 1);
       //ceng1 = brepsinsideed;
       //pz = bps;
     }
+
+
+
+
+
+
+
+//函数
+
+ int i = 0;
+  List <Brep> breps = new List<Brep>();
+  List <Brep> brepsinside = new List<Brep>();
+  List <Brep> brepsinsideed = new List<Brep>();
+  List <Brep> brepsinsideed01 = new List<Brep>();
+  //brepsinsideed
+
+
+  //
+  public int panduan(List < int> listcount, int count)
+  {
+    List <int> ad = new List <int>();
+    for(int i = 0;i < listcount.Count;i++)
+    {
+      int m = 0;
+      for(int k = 0;k < 1 + i;k++)
+      {
+        m = m + listcount[k];
+      }
+      ad.Add(m);
+
+    }
+
+    //
+    int t = 0;
+    for(int j = 0;j < listcount.Count;j++)
+    {
+      int to = ad[j] - listcount[j];
+      int t1 = ad[j];
+      if(count >= to && count < t1)
+      {
+        t = j;
+
+      }
+
+    }
+    if(count == allint(listcount))
+    {
+      t = listcount.Count;
+    }
+
+    return t;
+
+  }
+
+
+
+
+
+
+
+  //
+  public int allint(List < int> m)
+  {
+    int d = 0;
+    foreach(int t in m)
+    {
+      d = d + t;
+    }
+    return d;
+
+  }
+  public List<Point3d> BoxToPts(Box R, int N, int S)
+  {
+    // Create List of points to hold randon points
+    List<Point3d> pts = new List<Point3d>();
+
+    // Random is a native C# class
+    // We  initialize it with a seed
+    // Create random float numbers by creating two number -- one is the integer and one is the remainder -- and combine them into one
+    Random random = new Random(S);
+
+    for(int i = 0; i < N; i++){
+      double x = random.Next(Convert.ToInt32(R.X.Min), Convert.ToInt32(R.X.Max)); // x integer
+      double xRemain = random.NextDouble(); // x remainder
+      x += xRemain;
+      double y = random.Next(Convert.ToInt32(R.Y.Min), Convert.ToInt32(R.Y.Max)); // y integer
+      double yRemain = random.NextDouble(); // y remainder
+      y += yRemain;
+      double z = random.Next(Convert.ToInt32(R.Z.Min), Convert.ToInt32(R.Z.Max)); // z integer
+      double zRemain = random.NextDouble(); // z remainder
+      z += zRemain;
+
+      // Create new points using the x, y, and z values and add it to the list of points
+      pts.Add(new Point3d(x, y, z));
+    }
+
+    return pts;
+  }
+  public Point3d PointToShpPoint(Point3d pt, double r2, double u, double v)
+  {
+    Vector3d[] ve;
+    Point3d pt1 = new Point3d();
+    Sphere a = new Sphere(pt, r2);
+    Surface s = a.ToNurbsSurface();
+    Brep b = a.ToBrep();
+    bool d = s.Evaluate(u, v, 1, out pt1, out ve);
+    return pt1;
+  }
+
+
+  public Brep RandomPointToBrep(Point3d pt, Interval r2, int seed, Interval r1, bool dool, double ceng, out Brep bp)
+  {
+
+
+
+
+
+
+    List<Point3d> pts = new List<Point3d>();
+    List<Point3d> pts3 = new List<Point3d>();
+    List<Point3d> pts32 = new List<Point3d>();
+    pts3.Add(pt);
+    pts32.Add(pt);
+    Random ran = new Random(seed);
+    double ran3 = r2.T0 + ran.NextDouble() * (r2.T1 - r2.T0);
+    double ran32 = ran3 + ceng;
+
+    int gInt = (int) (ran.NextDouble() * (r1.T1 - r1.T0) + r1.T0);
+    for (int i = 0; i < gInt; i++)
+    {
+      double ran1 = ran.NextDouble() * 2 * Math.PI;
+      double ran2 = -0.5 * Math.PI + Math.PI * ran.NextDouble();
+      pts3.Add(PointToShpPoint(pt, ran3, ran1, ran2));
+      pts32.Add(PointToShpPoint(pt, ran32, ran1, ran2));
+    }
+    // List<Point3d> pts02 = TwoPoints(pts, pt);
+
+    Interval n = new Interval(-ran3 * 0.5, ran3 * 0.5);
+    Interval n2 = new Interval(-ran32 * 0.5, ran32 * 0.5);
+    Box b = new Box(new Plane(pt, new Vector3d(0, 0, 1)), n, n, n);
+    Box b2 = new Box(new Plane(pt, new Vector3d(0, 0, 1)), n2, n2, n2);
+    //Brep bp = b.ToBrep();
+    bp = Voronoi3d(pts3, b);
+    // Brep bb = covew(pts02, pt, bp);
+    if(dool)
+    {
+      Brep bb = Voronoi3d(pts32, b2);
+      return bb;
+
+    }
+    else
+    {
+      Brep bb = Voronoi3d(pts3, b);
+      return bb;
+    }
+
+
+
+
+
+
+  }
+
+  private Brep Voronoi3d(List < Point3d > list, Box box)
+  {
+    checked
+    {
+      for (int i = list.Count - 1; i >= 0; i += -1)
+      {
+        if (!list[i].IsValid)
+        {
+          list.RemoveAt(i);
+        }
+      }
+      if (list.Count == 0)
+      {
+        return null;
+      }
+      Box valueb;
+      if (box.IsValid)
+      {
+        valueb = box;
+      }
+      else
+      {
+        Point3dList point3dList = new Point3dList(list);
+        valueb = new Box(point3dList.BoundingBox);
+        if (valueb.Volume == 0.0)
+        {
+          valueb.Inflate(0.01, 0.01, 0.01);
+        }
+      }
+      List<Brep> list2 = new List<Brep>();
+      Brep b = new Brep();
+      int num = list.Count - 1;
+      for (int j = 0; j <= num; j++)
+      {
+        Grasshopper.Kernel.Geometry.Voronoi.Cell3 cell = new Grasshopper.Kernel.Geometry.Voronoi.Cell3(list[j], valueb);
+        try
+        {
+          List<Point3d> list3 = new List<Point3d>(list.Count - 1);
+          int arg_10F_0 = 0;
+          int num2 = list.Count - 1;
+          for (int k = arg_10F_0; k <= num2; k++)
+          {
+            if (j != k)
+            {
+              if (!(list[j].DistanceTo(list[k]) < 1E-06))
+              {
+                list3.Add(list[k]);
+              }
+            }
+          }
+          cell.Slice(list3);
+          if (cell.Facets.Count == 0)
+          {
+            list2.Add(null);
+          }
+          else
+          {
+            Brep brep = cell.ToBrep();
+            if (brep != null && !brep.IsSolid)
+            {
+              Brep brep2 = brep.CapPlanarHoles(0.001);
+              if (brep2 != null)
+              {
+                brep = brep2;
+              }
+            }
+            list2.Add(brep);
+          }
+        }
+        catch (System.Exception ex)
+        {
+          Component.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.ToString());
+        }
+      }
+      b = list2[0];
+      return b;
+    }
+  }
+  public Brep covew(List < Point3d > pts, Point3d center, Brep box)
+  {
+    List<Plane> planes = new List<Plane>();
+    List<Brep> a = new List<Brep>();
+    List<Point3d> centers = TwoPoints(pts, center);
+    List<Curve> curves = new List<Curve>();
+    List<Brep> breps = new List<Brep>();
+
+    foreach (Point3d p in centers)
+    {
+      planes.Add(new Plane(p, new Vector3d(p.X - center.X, p.Y - center.Y, p.Z - center.Z)));
+    }
+
+    for (int k = 0; k < pts.Count; k++)
+    {
+      Transform scal = Transform.Scale(pts[k], 4);
+      Curve curves02 = sec(box, planes[k]);
+
+      if (curves02 != null)
+      {
+        curves02.Transform(scal);
+        curves.Add(curves02);
+      }
+    }
+
+    for (int i = 0; i < curves.Count; i++)
+    {
+      breps.Add(ClodCurve(curves[i], -10 * new Vector3d(pts[i].X - center.X, pts[i].Y - center.Y, pts[i].Z - center.Z)));
+    }
+
+    a.Add(box);
+    Brep bp = diffs(box, breps);
+    return bp;
+  }
+  public Curve sec(Brep b, Plane plane)
+  {
+    Curve[] curves;
+    Point3d[] points;
+    bool success = Rhino.Geometry.Intersect.Intersection.BrepPlane(
+      b, plane, 0.001, out curves, out points);
+
+    if (success && curves.Length > 0)
+    {
+      return curves[0];
+    }
+
+    return null; // 如果没有找到交线，返回 null
+  }
+  public Brep ClodCurve(Curve curve, Vector3d vector)
+  {
+    if (curve == null)
+      throw new ArgumentNullException("curve");
+
+    List<Brep> breps = new List<Brep>();
+
+    // 创建一个拉伸曲面
+    Surface surface = Surface.CreateExtrusion(curve, vector);
+    if (surface != null)
+    {
+      breps.Add(Brep.CreateFromSurface(surface));
+    }
+
+    // 使用 CreatePlanarBreps 封闭曲线
+    Brep[] planarBreps = Brep.CreatePlanarBreps(curve, this.RhinoDocument.ModelAbsoluteTolerance);
+    if (planarBreps != null && planarBreps.Length > 0)
+    {
+      breps.Add(planarBreps[0]);
+    }
+
+    Brep result = Join(breps);
+    return result;
+  }
+  public Brep diff(Brep A1, Brep B1)
+  {
+    if (A1 == null || B1 == null)
+      throw new ArgumentNullException("Brep A1 或 B1 为空");
+
+    Brep[] result = Brep.CreateBooleanDifference(
+      new List<Brep> { A1 },
+      new List<Brep> { B1 },
+      this.RhinoDocument.ModelAbsoluteTolerance,
+      false
+      );
+
+    if (result != null && result.Length > 0)
+    {
+      return result[0];
+    }
+
+    return A1; // 如果布尔差集失败，则返回原始 A1
+  }
+
+  public Brep diffs(Brep x, List<Brep> y)
+  {
+    Brep b = x;
+
+    foreach (Brep brep in y)
+    {
+      b = diff(b, brep);
+    }
+
+    return b;
+  }
+  public Brep Join(List < Brep > BIn)
+  {
+    if (BIn == null || BIn.Count == 0)
+      throw new ArgumentNullException("BIn");
+
+    Brep[] joinedBreps = Brep.JoinBreps(BIn, this.RhinoDocument.ModelAbsoluteTolerance);
+
+    if (joinedBreps != null && joinedBreps.Length > 0)
+    {
+      return joinedBreps[0];
+    }
+
+    return null;
+  }
+  public List<Point3d> TwoPoints(List < Point3d > pts, Point3d pt)
+  {
+    List<Point3d> pts1 = new List<Point3d>();
+    foreach(Point3d p in pts)
+    {
+      pts1.Add(new Point3d(0.5 * (p.X + pt.X), 0.5 * (p.Y + pt.Y), 0.5 * (p.Z + pt.Z)));
+    }
+    return pts1;
+
+  }
+  public List<Brep> pzxz(List<Brep> ms, Brep s, double f)
+  {
+    List<Brep> bs = new List <Brep>();
+    foreach(Brep b in ms)
+    {
+
+      Line l = new Line(Area(b), Area(s));
+      if(l.Length < f)
+      {
+        bs.Add(b);
+      }
+    }
+    return bs;
+  }
+
+  public Point3d Area(Brep b)
+  {
+    AreaMassProperties amp = null;
+    amp = AreaMassProperties.Compute(b);
+    Point3d p = amp.Centroid;
+    return p;
+  }
+
+
+
+  public bool pzjc(List < Brep > ms)
+  {
+    bool bt = new bool();
+    List<bool> bs = new List<bool>();
+    for(int i = 0; i < ms.Count;i++)
+    {
+      int m = 0;
+      for(int j = 0; j < ms.Count;j++)
+      {
+        if(i != j)
+        {
+          bs.Add(SolveIntersection(ms[i], ms[j]));
+          if(SolveIntersection(ms[i], ms[j]) == true)
+          {
+            m++;
+          }
+        }
+        if(m == 0)
+        {
+          bs.Add(false);
+        }
+        else
+        {
+          bs.Add(true);
+        }
+
+      }
+    }
+    int m1 = 0;
+    foreach(bool b in bs)
+    {
+      if(b)
+      {
+        m1++;
+      }
+    }
+    if(m1 == 0)
+    {
+      bt = true;
+    }
+    else
+    {
+      bt = false;
+    }
+
+
+    return bt;
+  }
+  private bool SolveIntersection(Brep brepA, Brep brepB){
+    bool intersecting = false;
+    double tol = doc.ModelAbsoluteTolerance;
+    //Define arrays to hold the intersection curves and points
+    Curve[] interCurves = new Curve[0];
+    Point3d[] interPoints = new Point3d[0];
+    bool success = Rhino.Geometry.Intersect.Intersection.BrepBrep
+      (brepA, brepB, tol, out interCurves, out interPoints);
+    //If there is an intersection
+    if(interCurves.Length > 0 || interPoints.Length > 0){
+      //Set boolean as true
+      intersecting = true;
+    }
+    return intersecting;
+  }
